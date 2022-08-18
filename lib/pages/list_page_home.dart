@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:lista_tarefas_curso/Repository/TodoRepository.dart';
 import 'package:lista_tarefas_curso/widgets/todo_list_item.dart';
 
 import '../models/Todos.dart';
@@ -12,10 +15,22 @@ class TodoList extends StatefulWidget {
 
 class _TodoListState extends State<TodoList> {
   final TextEditingController todoController = TextEditingController();
+  final TodoRepository todoRepository = TodoRepository();
 
   List<Todo> todos = [];
   Todo? todoRevertDelete;
   int? todoRevertPosition;
+
+
+  @override
+  void initState() {
+    super.initState();
+    todoRepository.getTodoList().then((value) {
+      setState(() {
+      todos = value;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +89,7 @@ class _TodoListState extends State<TodoList> {
                                 }
                               });
                               todoController.clear();
+                              todoRepository.saveTaskList(todos);
                             },
                             child: const Icon(
                               Icons.add,
@@ -136,6 +152,7 @@ class _TodoListState extends State<TodoList> {
                     onPressed: () {
                       setState(() {
                         todos.clear();
+                        todoRepository.saveTaskList(todos);
                       });
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -162,6 +179,7 @@ class _TodoListState extends State<TodoList> {
         todos.remove(todo);
       });
     }
+    todoRepository.saveTaskList(todos);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(
@@ -178,10 +196,13 @@ class _TodoListState extends State<TodoList> {
             todos.insert(
               todoRevertPosition!,
               todoRevertDelete!,
+
             );
+            todoRepository.saveTaskList(todos);
           });
         },
       ),
     ));
+    ;
   }
 }
