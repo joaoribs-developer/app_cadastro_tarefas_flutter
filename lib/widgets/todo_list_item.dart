@@ -4,14 +4,20 @@ import 'package:intl/intl.dart';
 
 import '../models/Todos.dart';
 
-class TodoListItem extends StatelessWidget {
+class TodoListItem extends StatefulWidget {
    TodoListItem({Key? key, required this.todo, required this.onDelete}) : super(key: key);
   final Todo todo;
   final Function(Todo) onDelete;
 
   @override
+  State<TodoListItem> createState() => _TodoListItemState();
+}
+
+class _TodoListItemState extends State<TodoListItem> {
+  @override
   Widget build(BuildContext context) {
-    return Slidable(
+    return
+      Slidable(
       key:  ValueKey(0),
       endActionPane: ActionPane(
         extentRatio: 0.30,
@@ -21,7 +27,9 @@ class TodoListItem extends StatelessWidget {
             foregroundColor: Colors.white,
             icon: Icons.delete,
             label: 'Delete',
-            onPressed: onDelete(todo),
+            onPressed: (_){
+              widget.onDelete(widget.todo);
+            },
 
           )
         ],
@@ -39,11 +47,11 @@ class TodoListItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              DateFormat('dd/MM/yyyy - HH:mm').format(todo.data),
+              DateFormat('dd/MM/yyyy - HH:mm').format(widget.todo.data),
               style: const TextStyle(fontSize: 14),
             ),
             Text(
-              todo.nome,
+              widget.todo.nome,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             )
           ],

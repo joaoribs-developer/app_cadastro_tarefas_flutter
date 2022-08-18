@@ -14,6 +14,8 @@ class _TodoListState extends State<TodoList> {
   final TextEditingController todoController = TextEditingController();
 
   List<Todo> todos = [];
+  Todo? todoRevertDelete;
+  int? todoRevertPosition;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,7 @@ class _TodoListState extends State<TodoList> {
                       Row(
                         children: [
                           Expanded(
-                            child:TextField(
+                            child: TextField(
                               controller: todoController,
                               decoration: const InputDecoration(
                                 border: OutlineInputBorder(),
@@ -36,7 +38,7 @@ class _TodoListState extends State<TodoList> {
                               ),
                             ),
                           ),
-                         const SizedBox(
+                          const SizedBox(
                             width: 16,
                           ),
                           ElevatedButton(
@@ -53,8 +55,8 @@ class _TodoListState extends State<TodoList> {
                                       barrierDismissible: true,
                                       builder: (BuildContext context) =>
                                           AlertDialog(
-                                            title:const
-                                                Text("Tarefa não adicionada"),
+                                            title: const Text(
+                                                "Tarefa não adicionada"),
                                             content: const Text(
                                                 "Impossivel adiconar uma tarefa em branco, preencha os campos"),
                                             actions: [
@@ -65,13 +67,12 @@ class _TodoListState extends State<TodoList> {
                                                   child: const Text("OK"))
                                             ],
                                           ));
-                                } else{
-                                  Todo newTodo  = Todo(
-                                    nome: text,
-                                    data: DateTime.now()
-                                  );
+                                } else {
+                                  Todo newTodo =
+                                      Todo(nome: text, data: DateTime.now());
                                   todos.add(newTodo);
-                              }});
+                                }
+                              });
                               todoController.clear();
                             },
                             child: const Icon(
@@ -89,10 +90,7 @@ class _TodoListState extends State<TodoList> {
                           shrinkWrap: true,
                           children: [
                             for (Todo todo in todos)
-                              TodoListItem(
-                                todo: todo,
-                                onDelete: onDelete
-                                )
+                              TodoListItem(todo: todo, onDelete: onDelete)
                           ],
                         ),
                       ),
@@ -110,9 +108,7 @@ class _TodoListState extends State<TodoList> {
                                   // primary: Colors.blue,
                                   primary: const Color(0xff00d7f3)),
                               onPressed: () {
-                                setState(() {
-                                  todos.clear();
-                                });
+                                apagarTudo();
                               },
                               child: const Text("Limpar tudo"))
                         ],
@@ -122,9 +118,70 @@ class _TodoListState extends State<TodoList> {
     );
   }
 
-  void onDelete(Todo todo){
-    setState(() {
-      todos.remove(todo);
-    });
+  void apagarTudo() {
+    showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => AlertDialog(
+              title: Text("Apagar tudo?"),
+              content: Text("Realmente deseja apagar todas as tarefas??"),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text("CANCELAR",
+                        style: TextStyle(color: Color(0xff00d7f3)))),
+                TextButton(
+                    onPressed: () {
+                      setState(() {
+                        todos.clear();
+                      });
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(
+                        "Todas as tarefas foram excluidas com sucesso",
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      backgroundColor: Colors.white,
+                      duration: Duration(seconds: 5)));
+                    },
+                    child: Text(
+                      "CONFIRMAR",
+                      style: TextStyle(color: Color(0xff00d7f3)),
+                    ))
+              ],
+            ));
+  }
+
+  void onDelete(Todo todo) {
+    todoRevertDelete = todo;
+    todoRevertPosition = todos.indexOf(todo);
+    if (mounted) {
+      setState(() {
+        todos.remove(todo);
+      });
+    }
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+        "A tarefa ${todo.nome} foi excluida com sucesso",
+        style: TextStyle(color: Colors.black),
+      ),
+      backgroundColor: Colors.white,
+      duration: Duration(seconds: 5),
+      action: SnackBarAction(
+        label: "Desfazer",
+        textColor: Color(0xff00d7f3),
+        onPressed: () {
+          setState(() {
+            todos.insert(
+              todoRevertPosition!,
+              todoRevertDelete!,
+            );
+          });
+        },
+      ),
+    ));
   }
 }
